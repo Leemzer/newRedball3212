@@ -2,186 +2,140 @@ using UnityEngine;
 
 public class Movement : MonoBehaviour
 {
-    public DirectionPointer directionPointer;
     public Rigidbody rb;
-    public Transform stickCheck;
-
     public float moveSpeed = 5f;
     public float jumpForce = 5f;
-    public bool isGrounded;
-    public bool isSticked;
-
+    public float stickForce = 100f;
+    public float turboMultiplier = 3f;
+    public float normalMoveSpeed = 0.4f;
+    public float normalDrag = 0.5f;
+    public float normalAngularDrag = 0.5f;
+    public float brakeDrag = 5f;
+    public float brakeAngularDrag = 5f;
+    public float stickRadius = 1.5f;
+    public Transform stickCheck;
+    public Transform directionPointer;
+    public Camera cam;
+    public LayerMask wallLayer;
+    public KeyCode stickKey;
+    public KeyCode jumpKey;
     public KeyCode stopMovementKey;
     public KeyCode turboMovementKey;
     public KeyCode fallKey;
-    public KeyCode gravityChangerKey;
 
-    public Vector2 moveInput;
-    public LayerMask groundFilter;
-    public LayerMask wallLayer;
-
-    private Quaternion originalDirectionPointerRotation;
-    private bool directionAdjusted = false;
-    private Vector3 currentCustomGravity = Vector3.zero;
+    private Vector2 moveInput;
+    private bool isGrounded;
+    private bool isStickingToWall = false;
+    private Vector3 customGravity;
 
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
-        originalDirectionPointerRotation = directionPointer.transform.localRotation;
+        customGravity = Physics.gravity;
     }
 
     void Update()
     {
-        ReadInput_Update();
+        moveInput.x = Input.GetAxis("Horizontal");
+        moveInput.y = Input.GetAxis("Vertical");
 
-        // Стрибок
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        if (Input.GetKeyDown(jumpKey))
         {
-            MakeJump();
-
-            // Також скасовує прилипання
-            if (isSticked)
+            if (isStickingToWall)
             {
-                isSticked = false;
-                currentCustomGravity = Vector3.zero;
-                rb.useGravity = true;
-                directionPointer.transform.localRotation = originalDirectionPointerRotation;
-                directionAdjusted = false;
+                isStickingToWall = false;
+                Physics.gravity = customGravity;
+                rb.AddForce(-rb.transform.forward * jumpForce + Vector3.up * jumpForce, ForceMode.Impulse);
+            }
+            else if (isGrounded)
+            {
+                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            }
+        }
+
+        if (Input.GetKeyDown(stickKey))
+        {
+            if (isStickingToWall)
+            {
+                isStickingToWall = false;
+                Physics.gravity = customGravity;
+            }
+            else
+            {
+                StickToWall();
             }
         }
     }
 
     void FixedUpdate()
     {
-        CheckGround_FixedUpdate();
-        Move_FixedUpdate();
+        CheckGround();
 
-        // Увімкнення/вимкнення прилипання
-        if (Input.GetKeyDown(gravityChangerKey))
+        if (!isStickingToWall)
         {
-            isSticked = !isSticked;
-
-            if (!isSticked)
-            {
-                currentCustomGravity = Vector3.zero;
-                rb.useGravity = true;
-                directionPointer.transform.localRotation = originalDirectionPointerRotation;
-                directionAdjusted = false;
-            }
+            Vector3 moveDir = cam.transform.TransformDirection(new Vector3(moveInput.x, 0, moveInput.y));
+            moveDir.y = 0;
+            rb.AddForce(moveDir.normalized * moveSpeed, ForceMode.VelocityChange);
+        }
+        else
+        {
+            Vector3 wallForward = Vector3.Cross(Vector3.up, -Physics.gravity.normalized);
+            Vector3 wallUp = Vector3.Cross(wallForward, -Physics.gravity.normalized);
+            Vector3 moveDir = wallForward * moveInput.x + wallUp * moveInput.y;
+            rb.AddForce(moveDir.normalized * moveSpeed, ForceMode.VelocityChange);
         }
 
-        if (isSticked)
-        {
-            rb.useGravity = false;
-
-            Collider[] hits = Physics.OverlapSphere(stickCheck.position, 3f, wallLayer);
-            float closestDistance = Mathf.Infinity;
-            Collider closestCollider = null;
-
-            foreach (Collider col in hits)
-            {
-                if (col.attachedRigidbody == rb) continue;
-
-                Vector3 closestPoint = col.ClosestPoint(stickCheck.position);
-                float distance = Vector3.Distance(stickCheck.position, closestPoint);
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    closestCollider = col;
-                }
-            }
-
-            if (closestCollider != null)
-            {
-                Ray ray = new Ray(stickCheck.position, (closestCollider.ClosestPoint(stickCheck.position) - stickCheck.position).normalized);
-                if (closestCollider.Raycast(ray, out RaycastHit hitInfo, 5f))
-                {
-                    Vector3 normal = hitInfo.normal;
-                    currentCustomGravity = -normal * 100f;
-
-                    if (!directionAdjusted)
-                    {
-                        Vector3 forward = Vector3.Cross(directionPointer.cameraObject.transform.right, normal).normalized;
-                        Quaternion targetRotation = Quaternion.LookRotation(forward, -normal);
-                        directionPointer.transform.rotation = targetRotation;
-                        directionAdjusted = true;
-                    }
-                }
-            }
-
-            rb.AddForce(currentCustomGravity, ForceMode.Acceleration);
-        }
-
-        if (!isSticked && directionAdjusted)
-        {
-            directionPointer.transform.localRotation = originalDirectionPointerRotation;
-            directionAdjusted = false;
-        }
-
-        if (Input.GetKey(fallKey) && !isGrounded && !isSticked)
+        if (!isGrounded && Input.GetKey(fallKey))
         {
             rb.AddForce(Vector3.down * 100f, ForceMode.Acceleration);
         }
 
         if (isGrounded && Input.GetKey(stopMovementKey))
         {
-            rb.angularDamping = 5;
-            rb.linearDamping = 5;
-            moveSpeed = 0f;
-            return;
+            rb.linearDamping = brakeDrag;
+            rb.angularDamping = brakeAngularDrag;
+        }
+        else
+        {
+            rb.linearDamping = normalDrag;
+            rb.angularDamping = normalAngularDrag;
         }
 
         if (Input.GetKey(turboMovementKey))
         {
-            moveSpeed = 3f;
-            rb.angularDamping = 0f;
-            rb.linearDamping = 0f;
-
-            if (isSticked)
-            {
-                isSticked = false;
-                currentCustomGravity = Vector3.zero;
-                rb.useGravity = true;
-                directionPointer.transform.localRotation = originalDirectionPointerRotation;
-                directionAdjusted = false;
-            }
+            moveSpeed = turboMultiplier;
         }
         else
         {
-            moveSpeed = 0.4f;
-            rb.angularDamping = 0.5f;
-            rb.linearDamping = 0.5f;
+            moveSpeed = normalMoveSpeed;
         }
     }
 
-    void ReadInput_Update()
+    void CheckGround()
     {
-        moveInput.x = Input.GetAxis("Horizontal");
-        moveInput.y = Input.GetAxis("Vertical");
+        isGrounded = Physics.CheckSphere(transform.position - new Vector3(0, 0.1f, 0), 0.5f, wallLayer);
     }
 
-    void MakeJump()
+    void StickToWall()
     {
-        rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-    }
+        Collider[] colliders = Physics.OverlapSphere(stickCheck.position, stickRadius, wallLayer);
+        if (colliders.Length == 0) return;
 
-    void CheckGround_FixedUpdate()
-    {
-        isGrounded = Physics.CheckSphere(transform.position - new Vector3(0, 0.1f, 0), 0.5f, groundFilter);
-    }
+        Transform closest = colliders[0].transform;
+        float minDist = Vector3.Distance(stickCheck.position, closest.ClosestPoint(stickCheck.position));
 
-    void Move_FixedUpdate()
-    {
-        if (!isSticked)
+        foreach (Collider col in colliders)
         {
-            // Поворот directionPointer лише коли не прилип
-            Quaternion targetRot = Quaternion.Euler(0, directionPointer.cameraObject.transform.eulerAngles.y, 0);
-            directionPointer.transform.rotation = targetRot;
+            float dist = Vector3.Distance(stickCheck.position, col.ClosestPoint(stickCheck.position));
+            if (dist < minDist)
+            {
+                closest = col.transform;
+                minDist = dist;
+            }
         }
 
-        Vector3 moveDirection = new Vector3(moveInput.x, 0, moveInput.y);
-        moveDirection = directionPointer.transform.TransformDirection(moveDirection);
-        moveDirection.y = 0; // рух по XZ
-        rb.AddForce(moveDirection.normalized * moveSpeed, ForceMode.VelocityChange);
+        Vector3 directionToWall = (stickCheck.position - closest.ClosestPoint(stickCheck.position)).normalized;
+        Physics.gravity = -directionToWall * stickForce;
+        isStickingToWall = true;
     }
 }
