@@ -2299,28 +2299,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 337660baf901d8c45a1e7d95216249d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  directionPointer: {fileID: 1112464919}
-  stickCheck: {fileID: 1565276980}
+  isSticked: 0
+  gravityDirection: {x: 0, y: -1, z: 0}
   rb: {fileID: 1558404912}
+  moveSpeed: 0.5
+  jumpForce: 9.55
+  stickForce: 100
+  turboMultiplier: 2
+  normalMoveSpeed: 0.4
+  normalDrag: 0.5
+  normalAngularDrag: 0.5
+  brakeDrag: 5
+  brakeAngularDrag: 5
+  stickRadius: 1.5
+  customGravityScale: 9.1
+  stickCheck: {fileID: 1565276980}
+  cam: {fileID: 330585545}
   wallLayer:
     serializedVersion: 2
     m_Bits: 128
-  groundFilter:
-    serializedVersion: 2
-    m_Bits: 0
-  moveSpeed: 0.5
-  jumpForce: 9.55
-  stickRadius: 1.5
-  wallGravityForce: 100
-  turboMultiplier: 2
-  isSticked: 0
-  isStickingToWall: 0
-  gravityScale: 0.5
   stickKey: 283
-  turboMovementKey: 282
-  stopMovementKey: 113
   jumpKey: 32
-  fallKey: 0
+  stopMovementKey: 113
+  turboMovementKey: 282
+  fallKey: 114
 --- !u!1 &1565276979
 GameObject:
   m_ObjectHideFlags: 0

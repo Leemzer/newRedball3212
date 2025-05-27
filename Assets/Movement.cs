@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class Movement : MonoBehaviour
 {
+    public bool isSticked = false;
+    public Vector3 gravityDirection = Vector3.down;
     public Rigidbody rb;
     public float moveSpeed = 5f;
     public float jumpForce = 5f;
@@ -13,8 +15,8 @@ public class Movement : MonoBehaviour
     public float brakeDrag = 5f;
     public float brakeAngularDrag = 5f;
     public float stickRadius = 1.5f;
+    public float customGravityScale = 20f;
     public Transform stickCheck;
-    public Transform directionPointer;
     public Camera cam;
     public LayerMask wallLayer;
     public KeyCode stickKey;
@@ -27,11 +29,13 @@ public class Movement : MonoBehaviour
     private bool isGrounded;
     private bool isStickingToWall = false;
     private Vector3 customGravity;
+    private Vector3 wallRight;
+    private Vector3 wallUp;
 
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
-        customGravity = Physics.gravity;
+         customGravity = new Vector3(0, -9.81f * customGravityScale, 0);
     }
 
     void Update()
@@ -44,8 +48,8 @@ public class Movement : MonoBehaviour
             if (isStickingToWall)
             {
                 isStickingToWall = false;
-                Physics.gravity = customGravity;
-                rb.AddForce(-rb.transform.forward * jumpForce + Vector3.up * jumpForce, ForceMode.Impulse);
+                rb.useGravity = true;
+                rb.AddForce(-gravityDirection * jumpForce, ForceMode.Impulse);
             }
             else if (isGrounded)
             {
@@ -58,7 +62,7 @@ public class Movement : MonoBehaviour
             if (isStickingToWall)
             {
                 isStickingToWall = false;
-                Physics.gravity = customGravity;
+                rb.useGravity = true;
             }
             else
             {
@@ -76,12 +80,14 @@ public class Movement : MonoBehaviour
             Vector3 moveDir = cam.transform.TransformDirection(new Vector3(moveInput.x, 0, moveInput.y));
             moveDir.y = 0;
             rb.AddForce(moveDir.normalized * moveSpeed, ForceMode.VelocityChange);
+
+            rb.AddForce(Vector3.down * customGravityScale, ForceMode.Acceleration);
         }
         else
         {
-            Vector3 wallForward = Vector3.Cross(Vector3.up, -Physics.gravity.normalized);
-            Vector3 wallUp = Vector3.Cross(wallForward, -Physics.gravity.normalized);
-            Vector3 moveDir = wallForward * moveInput.x + wallUp * moveInput.y;
+            rb.AddForce(gravityDirection * stickForce, ForceMode.Acceleration);
+
+            Vector3 moveDir = wallRight * moveInput.x + wallUp * moveInput.y;
             rb.AddForce(moveDir.normalized * moveSpeed, ForceMode.VelocityChange);
         }
 
@@ -119,23 +125,50 @@ public class Movement : MonoBehaviour
     void StickToWall()
     {
         Collider[] colliders = Physics.OverlapSphere(stickCheck.position, stickRadius, wallLayer);
-        if (colliders.Length == 0) return;
 
-        Transform closest = colliders[0].transform;
-        float minDist = Vector3.Distance(stickCheck.position, closest.ClosestPoint(stickCheck.position));
+        if (colliders.Length == 0)
+        {
+            return;
+        }
+
+        Transform closest = null;
+        Collider closestCollider = null;
+        float closestDistance = Mathf.Infinity;
 
         foreach (Collider col in colliders)
         {
             float dist = Vector3.Distance(stickCheck.position, col.ClosestPoint(stickCheck.position));
-            if (dist < minDist)
+            if (dist < closestDistance)
             {
                 closest = col.transform;
-                minDist = dist;
+                closestCollider = col;
+                closestDistance = dist;
             }
         }
 
-        Vector3 directionToWall = (stickCheck.position - closest.ClosestPoint(stickCheck.position)).normalized;
-        Physics.gravity = -directionToWall * stickForce;
-        isStickingToWall = true;
+        if (closest != null && closestCollider != null)
+        {
+            Vector3 directionToWall = (stickCheck.position - closestCollider.ClosestPoint(stickCheck.position)).normalized;
+            gravityDirection = -directionToWall;
+            rb.useGravity = false;
+
+            wallRight = Vector3.Cross(Vector3.up, gravityDirection).normalized;
+            wallUp = Vector3.Cross(gravityDirection, wallRight).normalized;
+
+            isStickingToWall = true;
+        }
     }
+    
+    void OnCollisionEnter(Collision collision)
+{
+    if (isStickingToWall && collision.gameObject.CompareTag("Vidlip"))
+    {
+        // Відлипання
+        isStickingToWall = false;
+        isSticked = false;
+        rb.useGravity = true;
+        Physics.gravity = customGravity;
+    }
+}
+
 }
