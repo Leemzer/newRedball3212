@@ -160,15 +160,15 @@ public class Movement : MonoBehaviour
     }
     
     void OnCollisionEnter(Collision collision)
-{
-    if (isStickingToWall && collision.gameObject.CompareTag("Vidlip"))
     {
-        // Відлипання
-        isStickingToWall = false;
-        isSticked = false;
-        rb.useGravity = true;
-        Physics.gravity = customGravity;
+        if (isStickingToWall && collision.gameObject.CompareTag("Vidlip"))
+         {
+            // Відлипання
+            isStickingToWall = false;
+            isSticked = false;
+            rb.useGravity = true;
+            //Physics.gravity = customGravity;
+        }
     }
-}
 
 }
