@@ -1,13 +1,19 @@
 using UnityEngine;
-
+using TMPro;
 public class CoinLogic : MonoBehaviour
 {
-    Status playerStatus;
+    private Status playerStatus;
     public AudioClip coinSound;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    private TextMeshProUGUI coinText;
+
     void Start()
     {
         playerStatus = GameObject.Find("Status").GetComponent<Status>();
+        GameObject textObject = GameObject.Find("CountCoin");
+        if (textObject != null)
+        {
+            coinText = textObject.GetComponent<TextMeshProUGUI>();
+        }
     }
 
     void OnTriggerEnter(Collider touch)
@@ -16,15 +22,11 @@ public class CoinLogic : MonoBehaviour
         {
             playerStatus.AddCoin();
             touch.GetComponent<AudioSource>().PlayOneShot(coinSound);
+            if (coinText != null)
+            {
+                coinText.text = "Coins: " + playerStatus.coins;
+            }
             Destroy(gameObject);
         }
-    }
-
-
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }
