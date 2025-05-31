@@ -11,10 +11,14 @@ public class AbilityBuyer : MonoBehaviour
     public int price = 5;
     public Material purchasedMaterial;
 
+    public AudioClip buying;
+    public AudioClip erorSound;
+
     private string savePath;
     private TextMeshProUGUI coinText;
     private Collider zoneCollider;
     private Renderer zoneRenderer;
+    private AudioSource audioSource;
 
     private void Start()
     {
@@ -26,6 +30,13 @@ public class AbilityBuyer : MonoBehaviour
 
         zoneCollider = GetComponent<Collider>();
         zoneRenderer = GetComponent<Renderer>();
+        audioSource = GetComponent<AudioSource>();
+
+        if (zoneRenderer == null)
+            Debug.LogWarning("Renderer не знайдено на Buing_zone!");
+
+        if (purchasedMaterial == null)
+            Debug.LogWarning("Матеріал Buing_zone_disabl не призначено!");
     }
 
     private void OnTriggerEnter(Collider other)
@@ -59,7 +70,6 @@ public class AbilityBuyer : MonoBehaviour
 
         AbilityData data = LoadData();
 
-        // Перевірка чи здібність уже куплена
         if (IsAbilityAlreadyBought(data))
         {
             Debug.Log("Ability already purchased");
@@ -71,24 +81,33 @@ public class AbilityBuyer : MonoBehaviour
             status.coins -= price;
             Debug.Log("The purchase was made successfully");
 
-            // Встановлюємо куплену здібність
             MarkAbilityAsBought(ref data);
-
-            // Оновлюємо монети в JSON
             data.coins = status.coins;
             SaveData(data);
 
             if (coinText != null)
                 coinText.text = "Coins: " + status.coins;
 
+            // Програти звук покупки
+            if (audioSource != null && buying != null)
+                audioSource.PlayOneShot(buying);
+
+            // Змінити матеріал
             if (purchasedMaterial != null && zoneRenderer != null)
                 zoneRenderer.material = purchasedMaterial;
+            else
+                Debug.LogWarning("Не вдалося змінити матеріал!");
 
             zoneCollider.isTrigger = false;
         }
         else
         {
             Debug.Log("not enought coins to buy");
+
+            // Програти звук помилки
+            if (audioSource != null && erorSound != null)
+                audioSource.PlayOneShot(erorSound);
+
             yield return new WaitForSeconds(2f);
             zoneCollider.enabled = true;
         }

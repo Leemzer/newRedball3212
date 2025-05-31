@@ -29,5 +29,4 @@ public class SceneLoader : MonoBehaviour
         SceneManager.LoadScene(lelvel);
     }
 
-
 }

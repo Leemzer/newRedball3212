@@ -1,7 +1,7 @@
 {
-    "coins": 1,
+    "coins": 30,
     "isBoughtTurbo": true,
-    "isBoughtStopMovement": false,
-    "isBoughtFall": false,
-    "isBoughtStick": false
+    "isBoughtStopMovement": true,
+    "isBoughtFall": true,
+    "isBoughtStick": true
 }

@@ -1,7 +1,29 @@
 using UnityEngine;
+using System.Collections;
+using System.IO;
+
+
+
+[System.Serializable]
+public class AbilityData
+{
+    public int coins = 0;
+    public bool isBoughtTurbo = false;
+    public bool isBoughtStopMovement = false;
+    public bool isBoughtFall = false;
+    public bool isBoughtStick = false;
+}
+
 
 public class Movement : MonoBehaviour
 {
+
+    public bool isBoughtTurbo = false;
+    public bool isBoughtStopMovement = false;
+    public bool isBoughtFall = false;
+    public bool isBoughtStick = false;
+    private string savePath;
+
     public bool isSticked = false;
     public Vector3 gravityDirection = Vector3.down;
     public Rigidbody rb;
@@ -35,7 +57,10 @@ public class Movement : MonoBehaviour
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
-         customGravity = new Vector3(0, -9.81f * customGravityScale, 0);
+        customGravity = new Vector3(0, -9.81f * customGravityScale, 0);
+        savePath = Path.Combine(Application.dataPath, "AbilityBoughtStatus.json");
+
+        LoadAbilityStatus();
     }
 
     void Update()
@@ -57,7 +82,7 @@ public class Movement : MonoBehaviour
             }
         }
 
-        if (Input.GetKeyDown(stickKey))
+        if (isBoughtStick && Input.GetKeyDown(stickKey))
         {
             if (isStickingToWall)
             {
@@ -91,12 +116,12 @@ public class Movement : MonoBehaviour
             rb.AddForce(moveDir.normalized * moveSpeed, ForceMode.VelocityChange);
         }
 
-        if (!isGrounded && Input.GetKey(fallKey))
+        if (!isGrounded && isBoughtFall && Input.GetKey(fallKey))
         {
             rb.AddForce(Vector3.down * 100f, ForceMode.Acceleration);
         }
 
-        if (isGrounded && Input.GetKey(stopMovementKey))
+        if (isGrounded && isBoughtStopMovement && Input.GetKey(stopMovementKey))
         {
             rb.linearDamping = brakeDrag;
             rb.angularDamping = brakeAngularDrag;
@@ -107,7 +132,7 @@ public class Movement : MonoBehaviour
             rb.angularDamping = normalAngularDrag;
         }
 
-        if (Input.GetKey(turboMovementKey))
+        if (isBoughtTurbo && Input.GetKey(turboMovementKey))
         {
             moveSpeed = turboMultiplier;
         }
@@ -158,11 +183,10 @@ public class Movement : MonoBehaviour
             isStickingToWall = true;
         }
     }
-    
     void OnCollisionEnter(Collision collision)
     {
         if (isStickingToWall && collision.gameObject.CompareTag("Vidlip"))
-         {
+        {
             // Відлипання
             isStickingToWall = false;
             isSticked = false;
@@ -170,5 +194,118 @@ public class Movement : MonoBehaviour
             //Physics.gravity = customGravity;
         }
     }
+
+
+    [System.Serializable]
+    public class AbilityData
+    {
+        public int coins = 0;
+        public bool isBoughtTurbo = false;
+        public bool isBoughtStopMovement = false;
+        public bool isBoughtFall = false;
+        public bool isBoughtStick = false;
+    }
+
+    private IEnumerator CheckAbilitiesBought()
+{
+    float timer = 0f;
+
+    while (timer < 2f)
+    {
+        if (File.Exists(savePath))
+        {
+            string json = File.ReadAllText(savePath);
+            AbilityData data = JsonUtility.FromJson<AbilityData>(json);
+
+            // Оновлюємо здібності, якщо їх ще не активовано
+            if (data.isBoughtTurbo && !isBoughtTurbo)
+            {
+                isBoughtTurbo = true;
+                Debug.Log("✔ Turbo ability activated!");
+            }
+
+            if (data.isBoughtStopMovement && !isBoughtStopMovement)
+            {
+                isBoughtStopMovement = true;
+                Debug.Log("✔ StopMovement ability activated!");
+            }
+
+            if (data.isBoughtFall && !isBoughtFall)
+            {
+                isBoughtFall = true;
+                Debug.Log("✔ Fall ability activated!");
+            }
+
+            if (data.isBoughtStick && !isBoughtStick)
+            {
+                isBoughtStick = true;
+                Debug.Log("✔ Stick ability activated!");
+            }
+        }
+
+        timer += Time.deltaTime;
+        yield return null;
+    }
+}
+
+
+   void OnTriggerEnter(Collider other)
+{
+    if (other.CompareTag("Shop_obj"))
+    {
+        StartCoroutine(CheckAbilitiesBought());
+    }
+}
+
+    private void LoadAbilityStatus()
+    {
+        if (File.Exists(savePath))
+        {
+            string json = File.ReadAllText(savePath);
+            AbilityData data = JsonUtility.FromJson<AbilityData>(json);
+
+            // Оновлюємо локальні змінні
+            isBoughtTurbo = data.isBoughtTurbo;
+            isBoughtStopMovement = data.isBoughtStopMovement;
+            isBoughtFall = data.isBoughtFall;
+            isBoughtStick = data.isBoughtStick;
+
+            // Оновлюємо coins у Status
+            Transform statusTransform = transform.Find("Status");
+            if (statusTransform != null)
+            {
+                Status status = statusTransform.GetComponent<Status>();
+                if (status != null)
+                {
+                    status.coins = data.coins;
+                }
+            }
+
+                // Оновлюємо текст в CountCoin (Canvas)
+GameObject coinTextObj = GameObject.Find("CountCoin");
+if (coinTextObj != null)
+{
+    TMPro.TextMeshProUGUI coinText = coinTextObj.GetComponent<TMPro.TextMeshProUGUI>();
+    if (coinText != null)
+    {
+        coinText.text = "Coins: " + data.coins;
+    }
+}
+else
+{
+    Debug.LogWarning("⚠ Не знайдено об'єкт CountCoin у Canvas.");
+}
+
+        
+            
+
+            Debug.Log("✔ Ability and coin data loaded from JSON.");
+        }
+        else
+        {
+            Debug.LogWarning("⚠ JSON file not found: AbilityBoughtStatus.json");
+        }
+    }
+
 
 }
