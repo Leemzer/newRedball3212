@@ -10,15 +10,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: ecc2f42fca89f3740b8a17afe602ad98, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 44.09
+      value: 23.337086
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ecc2f42fca89f3740b8a17afe602ad98, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.58
+      value: 5.45
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ecc2f42fca89f3740b8a17afe602ad98, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 3.4
+      value: -17.211094
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: ecc2f42fca89f3740b8a17afe602ad98, type: 3}
       propertyPath: m_LocalRotation.w
@@ -51,7 +51,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: ecc2f42fca89f3740b8a17afe602ad98, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 1ed5d40161cb7bd4b99e962c2e41b1de, type: 2}
+      objectReference: {fileID: 2100000, guid: de0e1a29c23859f44933a824c12f907a, type: 2}
     - target: {fileID: 919132149155446097, guid: ecc2f42fca89f3740b8a17afe602ad98, type: 3}
       propertyPath: m_Name
       value: tramp
