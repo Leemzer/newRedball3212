@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 1870476c8bdf58a489fc361680053d4b, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -452,6 +452,9 @@ MonoBehaviour:
   stopMovementKey: 113
   turboMovementKey: 304
   fallKey: 114
+  isGrounded: 0
+  isStickingToWall: 0
+  customGravity: {x: 0, y: 0, z: 0}
 --- !u!54 &192544158
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1331,7 +1334,7 @@ AudioSource:
   m_audioClip: {fileID: 8300000, guid: 51a496ff287ab774da2ac374d430a57d, type: 3}
   m_Resource: {fileID: 8300000, guid: 51a496ff287ab774da2ac374d430a57d, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.1
+  m_Volume: 0.3
   m_Pitch: 1
   Loop: 1
   Mute: 0

@@ -1,5 +1,5 @@
 {
-    "coins": 9,
+    "coins": 10,
     "isBoughtTurbo": true,
     "isBoughtStopMovement": true,
     "isBoughtFall": true,

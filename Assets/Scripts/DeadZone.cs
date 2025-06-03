@@ -9,7 +9,8 @@ public class DeadZone : MonoBehaviour
     {
         if (touch.CompareTag("Player"))
         {
-                respawnObject.RespawnPlayer();
+            respawnObject.RespawnPlayer();
+
         }
     }
     void Start()

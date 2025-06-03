@@ -4,7 +4,7 @@ public class SuperCheckpoint : MonoBehaviour
 {
     public Respawn respawnObject;
     public Vector3 offset = new Vector3(3f, 5f, 0f);
-    private AudioSource audioSource;
+    public AudioSource audioSource;
     private bool isPlayingLoop = false;
 
     void Start()
@@ -35,7 +35,7 @@ public class SuperCheckpoint : MonoBehaviour
         {
             if (audioSource != null && audioSource.clip != null)
             {
-                audioSource.pitch = Random.Range(0.7f, 1.5f);
+                audioSource.pitch = Random.Range(0.6f, 2f);
                 audioSource.Play();
                 yield return new WaitForSeconds(audioSource.clip.length / audioSource.pitch);
             }

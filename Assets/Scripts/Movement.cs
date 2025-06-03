@@ -41,6 +41,7 @@ public class Movement : MonoBehaviour
     public Transform stickCheck;
     public Camera cam;
     public LayerMask wallLayer;
+
     public KeyCode stickKey;
     public KeyCode jumpKey;
     public KeyCode stopMovementKey;
@@ -48,9 +49,9 @@ public class Movement : MonoBehaviour
     public KeyCode fallKey;
 
     private Vector2 moveInput;
-    private bool isGrounded;
-    private bool isStickingToWall = false;
-    private Vector3 customGravity;
+    public bool isGrounded;
+    public bool isStickingToWall = false;
+    public Vector3 customGravity;
     private Vector3 wallRight;
     private Vector3 wallUp;
 
@@ -183,17 +184,7 @@ public class Movement : MonoBehaviour
             isStickingToWall = true;
         }
     }
-    void OnCollisionEnter(Collision collision)
-    {
-        if (isStickingToWall && collision.gameObject.CompareTag("Vidlip"))
-        {
-            // Відлипання
-            isStickingToWall = false;
-            isSticked = false;
-            rb.useGravity = true;
-            //Physics.gravity = customGravity;
-        }
-    }
+
 
 
     [System.Serializable]
@@ -249,13 +240,21 @@ public class Movement : MonoBehaviour
 }
 
 
-   void OnTriggerEnter(Collider other)
-{
-    if (other.CompareTag("Shop_obj"))
+    void OnTriggerEnter(Collider other)
     {
-        StartCoroutine(CheckAbilitiesBought());
+        if (other.CompareTag("Shop_obj"))
+        {
+            StartCoroutine(CheckAbilitiesBought());
+        }
+
+        if (isStickingToWall && other.CompareTag("Vidlip"))
+    {
+            isStickingToWall = false;
+            rb.useGravity = true;
     }
-}
+    }
+
+
 
     private void LoadAbilityStatus()
     {
@@ -281,23 +280,23 @@ public class Movement : MonoBehaviour
                 }
             }
 
-                // Оновлюємо текст в CountCoin (Canvas)
-GameObject coinTextObj = GameObject.Find("CountCoin");
-if (coinTextObj != null)
-{
-    TMPro.TextMeshProUGUI coinText = coinTextObj.GetComponent<TMPro.TextMeshProUGUI>();
-    if (coinText != null)
-    {
-        coinText.text = "Coins: " + data.coins;
-    }
-}
-else
-{
-    Debug.LogWarning("⚠ Не знайдено об'єкт CountCoin у Canvas.");
-}
+            // Оновлюємо текст в CountCoin (Canvas)
+            GameObject coinTextObj = GameObject.Find("CountCoin");
+            if (coinTextObj != null)
+            {
+                TMPro.TextMeshProUGUI coinText = coinTextObj.GetComponent<TMPro.TextMeshProUGUI>();
+                if (coinText != null)
+                {
+                    coinText.text = "Coins: " + data.coins;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("⚠ Не знайдено об'єкт CountCoin у Canvas.");
+            }
 
-        
-            
+
+
 
             Debug.Log("✔ Ability and coin data loaded from JSON.");
         }
